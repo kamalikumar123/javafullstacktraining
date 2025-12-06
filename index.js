@@ -37,7 +37,7 @@ async function main() {
         res.json(result);
     });
 
-    // PUT – update full record
+    // PUT – update full record for all users
     app.put("/users/:id", async (req, res) => {
         const id = req.params.id;
         const result = await usersCollection.updateOne(
