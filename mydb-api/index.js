@@ -1,10 +1,72 @@
 const express = require("express");
 const app = express();
+const { MongoClient, ObjectId } = require("mongodb");
 
-app.get("/", (req, res) => {
-    res.send("Server Running Successfully!");
-});
+app.use(express.json());
 
-app.listen(3000, () => {
-    console.log("Server started on port 3000");
-});
+const url = "mongodb://127.0.0.1:27017";
+const client = new MongoClient(url);
+async function main() {
+    await client.connect();
+    console.log("Connected to MongoDB");
+
+    const db = client.db("mydb");
+    const usersCollection = db.collection("users");
+
+    // Root route
+    app.get("/", (req, res) => {
+        res.send("Server Running Successfully!");
+    });
+
+    // GET all users
+    app.get("/users", async (req, res) => {
+        const users = await usersCollection.find({}).toArray();
+        res.json(users);
+    });
+
+    // GET user by ID
+    app.get("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        const user = await usersCollection.findOne({ _id: new ObjectId(id) });
+        res.json(user);
+    });
+
+    // POST – add new user
+    app.post("/users", async (req, res) => {
+        const result = await usersCollection.insertOne(req.body);
+        res.json(result);
+    });
+
+    // PUT – update full record for all users
+    app.put("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await usersCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: req.body }
+        );
+        res.json(result);
+    });
+
+    // PATCH – update only selected fields
+    app.patch("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await usersCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: req.body }
+        );
+        res.json(result);
+    });
+
+    // DELETE – remove user
+    app.delete("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
+        res.json(result);
+    });
+
+    app.listen(3000, () => {
+        console.log("Server running on port 3000");
+    });
+}
+
+main().catch(console.error);
